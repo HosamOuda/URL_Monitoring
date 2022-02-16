@@ -15,7 +15,7 @@ require("dotenv").config();
 const nodemailer = require("nodemailer");
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
-const userID = "620ac3890a3c622b6c18218d";
+let userID = "620bfc44c8edf51f4cf4ee29";
 const createTransporter = async () => {
   const oauth2Client = new OAuth2(
     process.env.CLIENT_ID,
@@ -57,6 +57,8 @@ const createTransporter = async () => {
   return transporter;
 };
 
+
+
 function getTokenID (req)
 {
   let token = req.headers.cookie;
@@ -81,6 +83,11 @@ module.exports.checkURL = async (req, res) => {
     3- if the request is made (status code of 200s ) then the success flag is set to 1 otherwise the failure flag =1
     4- the user document is populated with the results and save to the db  
     */
+
+    // console.log("OSTOR YARAB");
+    // let temp = await User.findOne({_id : userID}).populate('URLobjects');
+    // console.log(temp.URLobjects[0].name);
+
   const { URL } = req.body;
   let successFlag = 0;
   let failureFlag = 0;
@@ -94,13 +101,11 @@ module.exports.checkURL = async (req, res) => {
     failureFlag = 1;
   }
   console.log("the fail flag ", failureFlag, " the success flag ", successFlag);
-  const temp =  getTokenID(req);
-  console.log("THE OUTPUT OF THE FUNCTION TOKENid IS ", temp);
+  // const temp =  getTokenID(req);
+  // console.log("THE OUTPUT OF THE FUNCTION TOKENid IS ", temp);
   let URLdocument = await MonitoredURL.findOne({ name: URL }).populate('userEmails');
-  console.log("MY DOCUMENT IS " , URLdocument , "the given url is ", URL);
   if (URLdocument) {
     // meaning that this url does exist in the monitored url database so we only need to add the current user email to its list of listening users
-    console.log("IN THE IF CONDITION");
     const URL_prev_status = URLdocument.status;
     console.log("MY STATUS NOW IS ",URL_prev_status , ((URL_prev_status) && (failureFlag == 1)));
     if ((URL_prev_status && failureFlag == 1) || (!URL_prev_status && successFlag == 1)) {
@@ -109,12 +114,15 @@ module.exports.checkURL = async (req, res) => {
       URLdocument.status = !URLdocument.status;
       if(failureFlag==1) URLdocument.downTimes = URLdocument.downTimes+1;
       else URLdocument.upTimes = URLdocument.upTimes+1;
+      //add the average response time here 
+
       await URLdocument.save();
       console.log("Saved the changes in the url document ")
       //send notification to all subscribed users 
       console.log("MY EMAILS LIST ",URLdocument.userEmails.email);
       
-      for(let userMail of URLdocument.userEmails.email){
+      for(let userDoc of URLdocument.userEmails){
+        let userMail = userDoc.email;
         const template_info = { email: userMail, urlName: URL };
         const source = fs.readFileSync(path.join(__dirname, "../views/URLstatusChange.handlebars"),"utf8");
         const compiledTemplate = handlebars.compile(source);
@@ -141,7 +149,7 @@ module.exports.checkURL = async (req, res) => {
         }
       }
       //finally push our user to the list of subscribed users in the url document and push the url into the user document
-      let currentUser = await User.findById({userID});
+      let currentUser = await User.findOne({_id: userID});
       currentUser.URLnames.push(URL);
       currentUser.URLobjects.push(URLdocument);
       await currentUser.save();
@@ -152,17 +160,23 @@ module.exports.checkURL = async (req, res) => {
   else{
       console.log("ENTERING THE CRITICAL SECTION");
       //the document is not there so we make a new one
-      const currentUser = await User.findById({_id:userID}); 
+      const currentUser = await User.findOne({_id:userID}); 
       console.log("MY CURRENT USER IS ", currentUser);
       let Urlstatus = true; 
       if(failureFlag==1) Urlstatus=false;
       const myCreatedURLdoc = await MonitoredURL.create({name: URL , status : Urlstatus });
       myCreatedURLdoc.userEmails.push(userID);
+      if(Urlstatus) myCreatedURLdoc.upTimes = 1 ;
+      else myCreatedURLdoc.downTimes = 1 ; 
       await myCreatedURLdoc.save();
       console.log("DONE SAVING THE DOCUMENT YAAAAAAAYY");
       currentUser.URLnames.push(URL);
       currentUser.URLobjects.push(myCreatedURLdoc);
       await currentUser.save();
+      console.log("FINISHED SAVING THE UPDATED USER DOCS");
+      
+
+      
   }
   
 };
@@ -202,6 +216,7 @@ module.exports.deleteURL = async (req, res) => {
  };
 
 module.exports.getReport = async (req, res) => {
-    const currentUser = await User.findOne({_id:userID}).populate("URLobjects");
-    res.status(200).json({msg : currentUser});
+    const currentUser = await User.findOne({_id:userID} , ' URLnames URLobjects email').lean()
+    .populate("URLobjects" , 'name status upTimes downTimes lastUp lastDown');
+    res.status(200).json({Report : currentUser});
 };
