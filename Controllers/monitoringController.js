@@ -84,10 +84,6 @@ module.exports.checkURL = async (req, res) => {
     4- the user document is populated with the results and save to the db  
     */
 
-    // console.log("OSTOR YARAB");
-    // let temp = await User.findOne({_id : userID}).populate('URLobjects');
-    // console.log(temp.URLobjects[0].name);
-
   const { URL } = req.body;
   let successFlag = 0;
   let failureFlag = 0;
