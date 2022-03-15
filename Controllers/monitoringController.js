@@ -106,7 +106,6 @@ module.exports.checkURL = async (req, res) => {
     console.log("MY STATUS NOW IS ",URL_prev_status , ((URL_prev_status) && (failureFlag == 1)));
     if ((URL_prev_status && failureFlag == 1) || (!URL_prev_status && successFlag == 1)) {
       // change in the status
-      console.log("INSIDE THE NESTED IF CONDITION");
       URLdocument.status = !URLdocument.status;
       if(failureFlag==1) URLdocument.downTimes = URLdocument.downTimes+1;
       else URLdocument.upTimes = URLdocument.upTimes+1;
@@ -132,8 +131,7 @@ module.exports.checkURL = async (req, res) => {
         try {
             await emailTransporter.sendMail(msg_obj, (error, info) => {
             if (error) {
-                console.log("error occured while sending reset password mail please try again later ",error);
-                res.status(400).json({msg: "error occured while sending reset password mail please try again later "});
+                res.status(400).json({msg: "error occured while sending notification mail please try again later "});
             } else {
                 console.log("Huraaaaaaaaay the email has been sent");
                 res.status(200).json({ msg: "Notification mail has been sent" });
@@ -165,7 +163,7 @@ module.exports.checkURL = async (req, res) => {
       if(Urlstatus) myCreatedURLdoc.upTimes = 1 ;
       else myCreatedURLdoc.downTimes = 1 ; 
       await myCreatedURLdoc.save();
-      console.log("DONE SAVING THE DOCUMENT YAAAAAAAYY");
+ 
       currentUser.URLnames.push(URL);
       currentUser.URLobjects.push(myCreatedURLdoc);
       await currentUser.save();
