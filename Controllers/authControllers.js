@@ -55,7 +55,7 @@ const createTransporter = async () => {
     oauth2Client.getAccessToken((err, token) => {
       if (err) {
         console.log(
-          "the error occured while getting access token is bla bla ............. ",
+          "the error occured while getting access token is ",
           err
         );
         reject("Failed to create access token :(");
@@ -120,15 +120,15 @@ module.exports.signupPost = async (req, res) => {
       await emailTransporter.sendMail(msg_obj, (error, info) => {
         if (error) {
           console.log(
-            "error occured while sending reset password mail please try again later ",
+            "error occured while sending OTP password mail please try again later ",
             error
           );
           res.status(400).json({
-            msg: "error occured while sending reset password mail please try again later ",
+            msg: "error occured while sending OTP password mail please try again later ",
           });
         } else {
           console.log("Huraaaaaaaaay the email has been sent");
-          res.status(200).json({ msg: "Reset code has been sent" });
+          res.status(200).json({ msg: "OTP code has been sent" });
         }
       });
     } catch (error) {
