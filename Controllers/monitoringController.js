@@ -194,6 +194,7 @@ module.exports.deleteURL = async (req, res) => {
     console.log("FOUND THE USER ",currentUser);
     if(currentUser.URLnames.includes(URL)) // the user has this url in his subscription list 
     {
+        //phase 1 is to remove the URL from the user's subscription list 
         let URLindex = currentUser.URLnames.indexOf(URL);
         currentUser.URLnames.splice(URLindex, 1);
         currentUser.URLobjects.splice(URLindex,1);
