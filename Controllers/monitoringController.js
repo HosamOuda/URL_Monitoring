@@ -92,10 +92,12 @@ module.exports.checkURL = async (req, res) => {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
-    successFlag = 1;
+    
   } catch (err) {
     failureFlag = 1;
   }
+  if (res.status<400) successFlag = 1 ;
+  else failureFlag=1;
   console.log("the fail flag ", failureFlag, " the success flag ", successFlag);
   // const temp =  getTokenID(req);
   // console.log("THE OUTPUT OF THE FUNCTION TOKENid IS ", temp);
